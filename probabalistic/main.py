@@ -21,12 +21,21 @@ def probabilistic_solver(numbers, max_iterations=100000000, batch_size=32768, ma
     solutions_found = 0
 
     for iteration in range(0, max_iterations):
+        # Generate 2 binary vectors of length n to represent the two subsets (red/blue)
+        # 0 : Do not include item at this index in the subset
+        # 1 : Include item at this index in the subset
         subsets = torch.randint(0, 2, (batch_size, n), dtype=torch.float32, device=device)
+
+        # Matrix multiply subsets with the numbers tensor to go from binary vectors to summed up subsets
+        # (n,1) vector matrix multiplied with a (1,n) vector will result in the sum of multipled elements.
         subset_sums = torch.mm(subsets, numbers_tensor.unsqueeze(1)).squeeze()
         
+        # Calculate the difference between the subsets' sums
         sum_diff = subset_sums.unsqueeze(1) - subset_sums.unsqueeze(0)
+        # Check if they are equal (difference is 0)
         equal_sum_pairs = torch.nonzero(torch.abs(sum_diff) < 1.0, as_tuple=False)
         
+        # Verify that the solution is correct
         for i, j in equal_sum_pairs:
             if i >= j:
                 continue
@@ -57,13 +66,13 @@ def probabilistic_solver(numbers, max_iterations=100000000, batch_size=32768, ma
         print("No solutions found.")
 
 def verify_solution(numbers, red_subset, blue_subset):
-    if not red_subset or not blue_subset:
+    if not red_subset or not blue_subset: # Not empty subset (this is a solution though)
         return False
-    if abs(sum(red_subset) - sum(blue_subset)) > 1:
+    if abs(sum(red_subset) - sum(blue_subset)) > 1: # Subsets' sums are equal
         return False
-    if set(red_subset) & set(blue_subset):
-        return False
-    if not (set(red_subset) | set(blue_subset)).issubset(set(numbers)):
+    if set(red_subset) & set(blue_subset): # There is no overlap in the sets (no double colouring)
+        return False 
+    if not (set(red_subset) | set(blue_subset)).issubset(set(numbers)): # All the numbers come from the original set
         return False
     return True
 
