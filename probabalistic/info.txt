@@ -1,0 +1,2 @@
+Ran for 30000 iterations.
+98,304,000 Attempted Subsets
